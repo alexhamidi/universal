@@ -7,7 +7,7 @@ let package = Package(
         .macOS(.v12)
     ],
     dependencies: [
-        .package(url: "https://github.com/MacPaw/OpenAI.git", revision: "4a3c5d20decb646ac0f0c91703b7aa61e15b7145")
+        .package(url: "https://github.com/MacPaw/OpenAI.git", from: "0.2.5")
     ],
     targets: [
         .executableTarget(

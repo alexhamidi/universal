@@ -3,6 +3,7 @@
 import Cocoa
 import Carbon
 import Foundation
+import SwiftUI
 
 
 // Styling for the window itself
@@ -73,25 +74,36 @@ class FloatingWindow: NSWindow {
 // Log object - most important f
 class KeyLogger: NSObject {
     private var eventTap: CFMachPort?
-    private var floatingWindow: FloatingWindow?
+    private var commandPaletteWindow: NSWindow?
     private let maxDisplayedChars = 1000
     private let lineLength: Int = 32
     private let numLines: Int = 5
     private let screenshotsDirectory = "screenshots"
 
-    private var isWindowVisible = false
+    private var isWindowVisible = false {
+        didSet {
+            updateWindowVisibility()
+        }
+    }
     private var fullBuffer: [String] = []
     // private var lastKeystrokes: [String] = [] // this is the buffer, most important
     private var isCommandKeyPressed = false
     private var isOptionKeyPressed = false
+    private var currentText: String = "" {
+        didSet {
+            updateWindowText()
+        }
+    }
+
+    // SwiftUI state
+    private var hostingController: NSHostingController<CommandPaletteView>?
 
     // starts to initialize the window
     override init() {
         super.init()
         print("KeyLogger initializing...")
-        floatingWindow = FloatingWindow.createWindow()
         setupScreenshotsDirectory()
-        updateWindowText()  // Add initial cursor
+        setupCommandPaletteWindow()
     }
 
     private func setupScreenshotsDirectory() {
@@ -164,13 +176,13 @@ class KeyLogger: NSObject {
         isWindowVisible.toggle()
 
         if isWindowVisible {
-            if floatingWindow == nil {
-                floatingWindow = FloatingWindow.createWindow()
+            if commandPaletteWindow == nil {
+                commandPaletteWindow = FloatingWindow.createWindow()
             }
             updateWindowText()  // Ensure cursor is displayed when window becomes visible
-            floatingWindow?.makeKeyAndOrderFront(nil)
+            commandPaletteWindow?.makeKeyAndOrderFront(nil)
         } else {
-            floatingWindow?.orderOut(nil)
+            commandPaletteWindow?.orderOut(nil)
         }
     }
 
@@ -195,6 +207,10 @@ class KeyLogger: NSObject {
         }
     }
 
+
+
+
+
     // this isnt really important
     func startLogging() {
         print("Starting keyboard logging...")
@@ -213,7 +229,8 @@ class KeyLogger: NSObject {
             userInfo: Unmanaged.passUnretained(self).toOpaque()
         ) else {
             print("Failed to create event tap")
-            floatingWindow?.textField.stringValue = "Failed to create event tap"
+            fullBuffer = ["Failed to create event tap"]
+            updateWindowText()
             return
         }
 
@@ -259,7 +276,7 @@ class KeyLogger: NSObject {
                 DispatchQueue.main.async {
                     logger.handleSubmit()
                 }
-                return Unmanaged.passRetained(event)
+                return nil
             }
 
 
@@ -348,13 +365,89 @@ class KeyLogger: NSObject {
 
     private func updateWindowText() {
         DispatchQueue.main.async {
-            if let window = self.floatingWindow {
-                window.textField.stringValue = self.getDisplayedText()
-            }
+            // Force SwiftUI view update
+            self.hostingController?.rootView = CommandPaletteView(
+                isVisible: .init(
+                    get: { self.isWindowVisible },
+                    set: { self.isWindowVisible = $0 }
+                ),
+                text: .init(
+                    get: { self.fullBuffer.joined() },
+                    set: { newValue in
+                        self.fullBuffer = [newValue]
+                    }
+                ),
+                onSubmit: { self.handleSubmit() }
+            )
         }
     }
 
+    private func updateWindowVisibility() {
+        DispatchQueue.main.async {
+            if self.isWindowVisible {
+                self.commandPaletteWindow?.makeKeyAndOrderFront(nil)
+                self.commandPaletteWindow?.center()
+            } else {
+                self.commandPaletteWindow?.orderOut(nil)
+                self.fullBuffer.removeAll()
+            }
+            // Force SwiftUI view update
+            self.hostingController?.rootView = CommandPaletteView(
+                isVisible: .init(
+                    get: { self.isWindowVisible },
+                    set: { self.isWindowVisible = $0 }
+                ),
+                text: .init(
+                    get: { self.fullBuffer.joined() },
+                    set: { newValue in
+                        self.fullBuffer = [newValue]
+                    }
+                ),
+                onSubmit: { self.handleSubmit() }
+            )
+        }
+    }
 
+    private func setupCommandPaletteWindow() {
+        let contentView = CommandPaletteView(
+            isVisible: .init(
+                get: { self.isWindowVisible },
+                set: { self.isWindowVisible = $0 }
+            ),
+            text: .init(
+                get: { self.fullBuffer.joined() },
+                set: { newValue in
+                    self.fullBuffer = [newValue]
+                }
+            ),
+            onSubmit: { self.handleSubmit() }
+        )
+
+        hostingController = NSHostingController(rootView: contentView)
+        commandPaletteWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 80),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        commandPaletteWindow?.contentViewController = hostingController
+        commandPaletteWindow?.level = .statusBar
+        commandPaletteWindow?.backgroundColor = .clear
+        commandPaletteWindow?.isOpaque = false
+        commandPaletteWindow?.hasShadow = true
+        commandPaletteWindow?.center()
+        commandPaletteWindow?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        commandPaletteWindow?.ignoresMouseEvents = false
+
+        // Position window near the top of the screen
+        if let screen = NSScreen.main {
+            let screenHeight = screen.frame.height
+            let windowHeight: CGFloat = 80
+            let yPosition = screenHeight - windowHeight - 100  // 100px from top
+            commandPaletteWindow?.setFrameTopLeftPoint(NSPoint(x: (screen.frame.width - 600) / 2, y: yPosition))
+        }
+    }
 }
 
 
@@ -390,6 +483,30 @@ struct KeyLoggerApp {
         let delegate = AppDelegate()
         app.delegate = delegate
         _ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)
+    }
+}
+
+struct CommandPaletteView: View {
+    @Binding var isVisible: Bool
+    @Binding var text: String
+    var onSubmit: () -> Void
+
+    var body: some View {
+        VStack {
+            TextField("What would you like to do?", text: $text)
+                .textFieldStyle(PlainTextFieldStyle())
+                .font(.system(size: 16))
+                .padding(12)
+                .background(Color(NSColor.windowBackgroundColor).opacity(0.8))
+                .cornerRadius(8)
+                .onSubmit {
+                    onSubmit()
+                }
+        }
+        .frame(width: 600)
+        .padding()
+        .background(Color(NSColor.windowBackgroundColor).opacity(0.6))
+        .cornerRadius(12)
     }
 }
 
