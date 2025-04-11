@@ -16,8 +16,8 @@ export default function HeroSection({ isLoaded }: HeroSectionProps) {
         <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#d4d4d8_0%,transparent_50%,#d4d4d8_100%)]"></span>
         <a
           target="_blank"
-          className="inline-flex h-full px-3 py-1 w-full cursor-pointer items-center justify-center rounded-full bg-[#111111] backdrop-blur-3xl"
-          href="https://www.linkedin.com/feed/update/urn:li:activity:7311254984879157248/"
+          className= {`${COMING_SOON ? 'cursor-default' : 'cursor-pointer'} inline-flex h-full px-3 py-1 w-full  items-center justify-center rounded-full bg-[#111111] backdrop-blur-3xl `}
+          href={COMING_SOON ? undefined : 'https://www.linkedin.com/feed/update/urn:li:activity:7311254984879157248/'}
         >
           {!COMING_SOON ? <span className="relative z-10 flex items-center gap-1">
             Biggest agent update ever.
