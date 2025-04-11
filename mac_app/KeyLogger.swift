@@ -50,12 +50,7 @@ class KeyLogger: NSObject {
         }
         Task {
             do {
-                guard let screenshotPath = ScreenshotUtils.shared.captureScreenshot() else {
-                    print("Failed to capture screenshot")
-                    return
-                }
-                print("Captured screenshot at: \(screenshotPath)")
-                let response = try await AIService.shared.submitPrompt(currentText, screenshotPath) // request or keep api?
+                let response = try await AIService.shared.runAgent(currentText) // request or keep api?
                 self.llmResponse = response
                 // fullBuffer.removeAll()
                 // Text()

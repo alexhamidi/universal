@@ -26,5 +26,13 @@
     <string>This app needs to monitor keyboard input to display your keystrokes.</string>
     <key>NSScreenCaptureUsageDescription</key>
     <string>This app needs to capture screenshots when submitting text.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>This app needs to control your mouse to perform actions.</string>
+    <key>Privacy - Accessibility Usage Description</key>
+    <string>This app needs accessibility access to control your mouse.</string>
+    <key>NSAppleScriptEnabled</key>
+    <true/>
+    <key>NSSystemAdministrationUsageDescription</key>
+    <string>This app needs to control system events for mouse control.</string>
 </dict>
 </plist>

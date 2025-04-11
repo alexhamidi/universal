@@ -16,6 +16,7 @@ swiftc -parse-as-library \
     AIService.swift \
     utils/ScreenshotUtils.swift \
     utils/KeyUtils.swift \
+    utils/MouseUtils.swift \
     -o KeyLogger.app/Contents/MacOS/KeyLogger \
     -framework Cocoa \
     -framework Carbon
