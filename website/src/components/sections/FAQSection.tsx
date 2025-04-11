@@ -9,8 +9,8 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
-    question: "Is Interview Coder free?",
-    answer: "No, Interview Coder requires a subscription. We offer different pricing tiers to suit your needs."
+    question: "Is Panoptica free?",
+    answer: "No, Panoptica requires a subscription. We offer different pricing tiers to suit your needs."
   },
   {
     question: "How is it undetectable?",
@@ -22,7 +22,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "Are languages other than English supported?",
-    answer: "Yes, Interview Coder supports multiple languages including Chinese, Spanish, and more."
+    answer: "Yes, Panoptica supports multiple languages including Chinese, Spanish, and more."
   },
   {
     question: "I'm experiencing a bug, what should I do",
@@ -30,7 +30,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "Does the app work with current Zoom versions?",
-    answer: "Yes, Interview Coder works with all current versions of Zoom and other major screen sharing platforms."
+    answer: "Yes, Panoptica works with all current versions of Zoom and other major screen sharing platforms."
   }
 ];
 
@@ -38,15 +38,16 @@ export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="py-24 relative">
+    <section id="faq" className="py-24 relative">
       <div className="container p-5 lg:p-0 mx-auto max-w-4xl">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 tracking-tight">
-            <span className="white-gradient font-inter select-none">Common Questions</span>
-          </h2>
-          <p className="text-neutral-400 max-w-2xl mx-auto select-none">
-            Everything you need to know about Interview Coder.
-          </p>
+
+          <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent py-2">
+          Common Questions
+        </h2>
+        <p className="text-lg leading-8 text-[#999999]">
+          Everything you need to know about Panoptica.
+        </p>
         </div>
 
         <div className="mx-auto rounded-2xl border border-neutral-700/40 divide-y divide-neutral-700/40 bg-neutral-900/20 backdrop-blur-xs">

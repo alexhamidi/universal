@@ -1,23 +1,23 @@
 import Image from 'next/image';
 
-export default function UndetectabilitySection() {
+export default function FeaturesSection() {
   return (
-    <section className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 py-24 select-none">
+    <section id="features" className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8 py-24 select-none">
       <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold mb-4 tracking-tight">
-          <span className="white-gradient font-inter">Undetectability</span>
+      <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent py-2">
+          Features
         </h2>
-        <p className="text-neutral-400 max-w-2xl mx-auto">
-          Here's how we ensure that Interview Coder is undetectable.
+        <p className="text-lg leading-8 text-[#999999]">
+          Heres what makes Panoptica so powerful
         </p>
       </div>
 
-      <div className="relative w-full max-w-[400px] mx-auto h-[40px]">
+      {/* <div className="relative w-full max-w-[400px] mx-auto h-[40px]">
         <ProBadge />
-      </div>
+      </div> */}
 
       <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-10">
-        <UndetectabilityCard
+        <FeatureCard
           title="Screen Sharing"
           description="Completely invisible during screen sharing, cannot be seen by the other side. Your answers remain private while you get the help you need."
           icon={<ScreenIcon />}
@@ -25,7 +25,7 @@ export default function UndetectabilitySection() {
           className="lg:col-span-5"
         />
 
-        <UndetectabilityCard
+        <FeatureCard
           title="Active Tab Detection"
           description="Bypasses active tab detection in all major browsers and screen sharing software."
           icon={<CommandIcon />}
@@ -68,7 +68,7 @@ function ProBadge() {
   );
 }
 
-interface UndetectabilityCardProps {
+interface FeatureCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -77,10 +77,10 @@ interface UndetectabilityCardProps {
   className?: string;
 }
 
-function UndetectabilityCard({ title, description, icon, image, video, className }: UndetectabilityCardProps) {
+function FeatureCard({ title, description, icon, image, video, className }: FeatureCardProps) {
   return (
     <div className={`flex p-px ${className}`}>
-      <a className="relative rounded-lg bg-[#171717] ring-1 ring-white/10 cursor-pointer" href="/help?section=undetectability">
+      <div className="relative rounded-lg bg-[#171717] ring-1 ring-white/10 ">
         <div className="glow-border" />
         <div className="relative mx-auto overflow-hidden rounded-t-lg bg-black/50 h-82 pointer-events-none">
           {image ? (
@@ -96,7 +96,7 @@ function UndetectabilityCard({ title, description, icon, image, video, className
           <p className="text-lg font-medium tracking-tight text-white">{title}</p>
           <p className="mt-2 max-w-lg text-sm/6 text-zinc-400">{description}</p>
         </div>
-      </a>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,8 @@
 
 # Mac OS
 .DS_Store
+.AppleDouble
+.LSOverride
 
 # Build outputs
 KeyLogger.app/
@@ -26,12 +28,25 @@ screenshots/
 .vs/
 
 # Xcode
-*.xcodeproj/
+xcuserdata/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/*.xcworkspace/contents.xcworkspacedata
 *.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+DerivedData/
+build/
+
+# macOS app specific
+*.app
+*.dmg
+*.pkg
 
 # Swift Package Manager
 .build/
 .swiftpm/
+Package.resolved
 
 # Logs
 *.log
@@ -66,3 +81,24 @@ coverage/
 # Typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# macOS thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+.venv/

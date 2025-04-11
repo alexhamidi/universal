@@ -17,25 +17,24 @@ interface SocialLinkProps {
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/[0.1] px-8 pt-20 bg-neutral-950/88 backdrop-blur-3xl w-full relative overflow-hidden">
-      <div className="max-w-7xl mx-auto text-sm text-neutral-500 flex sm:flex-row flex-col justify-between items-start md:px-8">
+    <footer className="border-t border-white/[0.1] px-8 py-20 bg-neutral-950/88 backdrop-blur-3xl w-full relative overflow-hidden">
+      <div className="max-w-7xl mx-auto text-sm text-neutral-500 flex sm:flex-row flex-col justify-between items-start md:px-8 ">
         <div>
           <div className="mr-0 md:mr-4 md:flex mb-4">
             <Link href="/" className="font-normal flex space-x-2 items-center text-xl mr-4 text-black px-2 py-1 relative z-20">
               <Image
-                src="/logo.svg"
-                alt="InterviewCoder"
+                src="/logo.png"
+                alt="Panoptica"
                 width={30}
                 height={30}
-                className="rounded-full"
+                className=""
               />
-              <span className="font-bold text-white">Interview Coder</span>
+              <span className="font-bold text-white">Panoptica</span>
             </Link>
           </div>
 
           <div className="text-neutral-300/90 text-sm max-w-sm ml-2">
-            Interview Coder is a desktop app designed to help job seekers ace technical interviews
-            by providing real-time assistance with coding questions.
+            Panoptica is a desktop app designed to help you do things faster. Use AI for writing assistance, design, coding, and everything in between.
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center mx-2 mt-4 mb-10">
@@ -47,7 +46,7 @@ export default function Footer() {
           <StatusIndicator />
 
           <div className="mt-3 ml-2 text-[13px] select-none">
-            © 2025 Interview Coder. All rights reserved.
+            © 2025 Panoptica. All rights reserved.
           </div>
         </div>
 
@@ -71,9 +70,6 @@ export default function Footer() {
         </div>
       </div>
 
-      <p className="text-center mt-20 text-4xl md:text-8xl lg:text-[7rem] xl:text-[10rem] font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-950 to-primary/20 inset-x-0 lg:-mb-5 select-none">
-        Interview Coder
-      </p>
     </footer>
   );
 }

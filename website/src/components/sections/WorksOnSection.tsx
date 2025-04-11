@@ -4,11 +4,11 @@ export default function WorksOnSection() {
   return (
     <div className="flex flex-col items-center justify-center py-12 lg:py-20 select-none">
       <div className="text-center mb-12 space-y-4">
-        <h2 className="text-4xl lg:text-5xl font-bold text-white white-gradient py-2">
+        <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent py-2">
           Works Everywhere
         </h2>
         <p className="text-lg leading-8 text-[#999999]">
-          Invisible to all screen-recording softwares.
+          Collaborate with agents to create desings, write code, and everything else.
         </p>
       </div>
 
@@ -18,13 +18,13 @@ export default function WorksOnSection() {
             <PlatformCard key={platform.name} {...platform} />
           ))}
         </div>
-        <p className="text-center text-sm text-zinc-500 mt-8 px-4">
+        {/* <p className="text-center text-sm text-zinc-500 mt-8 px-4">
           Undetectability may not work with some versions of MacOS. See our{' '}
           <a href="/help?section=shows-when-sharing" className="underline hover:text-gray-400 transition-colors">
             notice
           </a>{' '}
           for more details.
-        </p>
+        </p> */}
       </div>
     </div>
   );

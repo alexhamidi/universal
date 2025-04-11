@@ -1,18 +1,17 @@
-export default function ProofSection() {
+export default function DemoSection() {
   return (
-    <section className="mx-auto max-w-7xl px-6 lg:px-8 select-none" id="proof">
-      <div className="mx-auto max-w-3xl">
-        <div className="relative">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-              <span className="white-gradient">Proof</span>
-            </h2>
-            <p className="text-md sm:text-lg text-[#999999] max-w-[700px] mx-auto">
-              Watch me get an offer from Amazon using Interview Coder. Throughout this whole video,
-              you'll see me use Interview Coder for both the OA and the final round.
-            </p>
-          </div>
+    <section id="demo" className="py-24 relative">
+      <div className="container mx-auto px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent py-2">
+            Demo
+          </h2>
+          <p className="text-lg leading-8 text-[#999999]">
+            Watch me solve a real coding interview
+          </p>
+        </div>
 
+        <div className="mx-auto max-w-3xl">
           <video
             className="w-full rounded-xl shadow-xl"
             controls
@@ -26,7 +25,7 @@ export default function ProofSection() {
             Your browser does not support the video tag.
           </video>
 
-          <p className="text-center text-sm text-zinc-500 mt-8 px-4">
+          <p className="text-center text-sm text-zinc-500 mt-8">
             Watch the full video{' '}
             <a
               target="_blank"
