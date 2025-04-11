@@ -39,7 +39,7 @@ export default function Footer() {
 
           <div className="flex flex-col sm:flex-row justify-between items-center mx-2 mt-4 mb-10">
             <div className="flex items-center space-x-4 mr-16">
-              <SocialLinks />
+              {/* <SocialLinks /> */}
             </div>
           </div>
 
@@ -51,7 +51,7 @@ export default function Footer() {
         </div>
 
         <div className="grid grid-cols-2 gap-10 items-start mt-10 sm:mt-0 md:mt-0">
-          <FooterLinks
+          {/* <FooterLinks
             title="Legal"
             links={[
               { href: "/policies", text: "Refund Policy" },
@@ -66,7 +66,7 @@ export default function Footer() {
               { href: "/signup", text: "Create account" },
               { href: "/signin", text: "Login to account" }
             ]}
-          />
+          /> */}
         </div>
       </div>
 

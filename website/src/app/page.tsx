@@ -14,8 +14,9 @@ import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import Analytics from '@/components/Analytics';
 import ClientOnly from '@/components/ClientOnly';
-
+import { COMING_SOON } from "@/constants"
 export default function Home() {
+
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -38,26 +39,26 @@ export default function Home() {
         {/* Company Logos Section */}
         <CompanyLogosSection isLoaded={isLoaded} />
 
+        {!COMING_SOON  ? <>
+
+          <WorksOnSection />
+
+{/* Proof Section */}
+          <DemoSection />
+
+          {/* Features Section */}
+          <FeaturesSection />
+
+          {/* Pricing Section */}
+          <PricingSection />
+
+          {/* FAQ Section */}
+          <FAQSection />
+
+        </> : <div className="mb-11"></div>}
+
         {/* Works On Everything Section */}
-        <WorksOnSection />
 
-        {/* Proof Section */}
-        <DemoSection />
-
-        {/* Features Section */}
-        <FeaturesSection />
-
-        {/* Pricing Section */}
-        <PricingSection />
-
-        {/* FAQ Section */}
-        <FAQSection />
-        <Image
-            src="/thing.png"
-            alt="Panoptica"
-            width={200}
-            height={200}
-          />
       </main>
 
       {/* Footer */}

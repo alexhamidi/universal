@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, ChevronDown } from 'lucide-react';
 import { useScrollToSection } from '@/hooks/useScrollToSection';
-
+import { COMING_SOON } from '@/constants';
 interface NavbarProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
@@ -33,10 +33,10 @@ export default function Header({ isMenuOpen, setIsMenuOpen }: NavbarProps) {
         </Link>
 
         <div className="lg:flex flex-row flex-1 absolute inset-0 hidden items-center justify-center space-x-8">
-          <NavLink href="/#demo">Demo</NavLink>
-          <NavLink href="/#features">Features</NavLink>
-          <NavLink href="/#pricing">Pricing</NavLink>
-          <NavLink href="/#faq">FAQ</NavLink>
+          {!COMING_SOON && <NavLink href="/#demo">Demo</NavLink>}
+          {!COMING_SOON && <NavLink href="/#features">Features</NavLink>}
+          {!COMING_SOON && <NavLink href="/#pricing">Pricing</NavLink>}
+          {!COMING_SOON && <NavLink href="/#faq">FAQ</NavLink>}
         </div>
 
         <div className="flex items-center gap-6">
@@ -60,7 +60,7 @@ export default function Header({ isMenuOpen, setIsMenuOpen }: NavbarProps) {
               </>
             )
           )}
-          <Link
+          {!COMING_SOON && <Link
             href="/signup"
             className="rounded-full flex items-center gap-2 cursor-pointer bg-zinc-300 text-black shadow-[0_0_50px_-5px_rgba(228,228,231,0.5)] z-20 px-4 py-2 text-sm font-medium text-black hover:bg-primary/90 transition-colors"
           >
@@ -68,7 +68,7 @@ export default function Header({ isMenuOpen, setIsMenuOpen }: NavbarProps) {
       <path d="M11.6734 7.22198C10.7974 7.22198 9.44138 6.22598 8.01338 6.26198C6.12938 6.28598 4.40138 7.35397 3.42938 9.04597C1.47338 12.442 2.92538 17.458 4.83338 20.218C5.76938 21.562 6.87338 23.074 8.33738 23.026C9.74138 22.966 10.2694 22.114 11.9734 22.114C13.6654 22.114 14.1454 23.026 15.6334 22.99C17.1454 22.966 18.1054 21.622 19.0294 20.266C20.0974 18.706 20.5414 17.194 20.5654 17.11C20.5294 17.098 17.6254 15.982 17.5894 12.622C17.5654 9.81397 19.8814 8.46998 19.9894 8.40998C18.6694 6.47798 16.6414 6.26198 15.9334 6.21398C14.0854 6.06998 12.5374 7.22198 11.6734 7.22198ZM14.7934 4.38998C15.5734 3.45398 16.0894 2.14598 15.9454 0.849976C14.8294 0.897976 13.4854 1.59398 12.6814 2.52998C11.9614 3.35798 11.3374 4.68998 11.5054 5.96198C12.7414 6.05798 14.0134 5.32598 14.7934 4.38998Z" />
     </svg>
             Download
-          </Link>
+          </Link>}
         </div>
       </div>
 
@@ -195,13 +195,13 @@ function UserMenu({ user, signOut }: { user: any, signOut: () => Promise<void> }
             <div className="text-sm text-neutral-400 truncate">{user.email}</div>
           </div>
           <div className="">
-            <Link
+            {!COMING_SOON && <Link
               href="/settings"
               className="block w-full text-left px-4 py-3 text-sm text-neutral-300 hover:text-white hover:bg-white/5 transition-colors  cursor-pointer"
               onClick={() => setIsOpen(false)}
             >
               Account Settings
-            </Link>
+            </Link>}
             <button
               onClick={() => {
                 signOut();

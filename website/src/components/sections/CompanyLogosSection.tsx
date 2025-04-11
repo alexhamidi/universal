@@ -26,7 +26,7 @@ export default function CompanyLogosSection({ isLoaded }: CompanyLogosSectionPro
         className="max-w-7xl mx-auto px-4"
       >
         <h3 className="text-center text-base font-medium text-neutral-400 mb-8">
-          <span className="text-blue-100/5">(not yet) &nbsp;</span>trusted by engineers at
+          <span className="text-blue-100/20">(not yet) &nbsp;</span>trusted by engineers at
         </h3>
 
         <div className="relative w-full max-w-7xl mx-auto overflow-hidden">
