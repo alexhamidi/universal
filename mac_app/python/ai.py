@@ -42,7 +42,7 @@ Action = Union[ClickAction, TypeAction, DragAction, ScrollAction, WaitAction]
 
 @dataclass
 class ToolResponse:
-    action: Action
+    action: Action # This is for validation but not passed
     explanation: str
 
 openai = OpenAI()

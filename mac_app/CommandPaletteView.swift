@@ -4,11 +4,19 @@ struct CommandPaletteView: View {
     @Binding var isVisible: Bool
     @Binding var text: String
     @State private var isResponseVisible = false
+    @Binding var inChatMode: Bool
     let llmResponse: String
     var onSubmit: () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
+            Picker("Mode:", selection: $inChatMode) {
+                Text("Chat").tag(true)
+                Text("Agent").tag(false)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 12)
+
             TextField("What would you like to do?", text: $text, axis: .vertical)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.system(size: 16))

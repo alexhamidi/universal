@@ -78,7 +78,7 @@ class AIService {
         let explanation: String
     }
 
-    func submitPrompt(_ text: String) async throws -> String {
+    func sendChat(_ text: String) async throws -> String {
         let screenshotPath = ScreenshotUtils.shared.captureScreenshot()
         guard let baseURL = URL(string: "http://localhost:8003/api/submit"),
               var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: true) else {
@@ -142,53 +142,43 @@ class AIService {
             let toolResponse = apiResponse.tool_response
             print("received response from agent: \(toolResponse)")
 
-            // Parse the tool response
-            if let toolResponseData = toolResponse.data(using: .utf8) {
-                print("Attempting to decode JSON: \(toolResponse)")
-                do {
-                    let agentResponse = try JSONDecoder().decode(AgentToolResponse.self, from: toolResponseData)
-
-                    // Get coordinates from either format
-                    guard let x = agentResponse.action.finalX,
-                          let y = agentResponse.action.finalY else {
-                        return "Missing coordinates in response"
-                    }
-
-                    print("Successfully extracted coordinates: (\(x), \(y))")
-
-                    // Convert coordinates to screen space
-                    guard let point = convertToScreenCoordinates(x: x, y: y) else {
-                        return "Failed to convert coordinates to screen space"
-                    }
-
-                    print("Attempting to click at screen coordinates: \(point)")
-
-                    // Handle the action based on type
-                    switch agentResponse.action.type {
-                    case "click":
-                        MouseUtils.shared.click(at: point)
-                    case "double_click":
-                        MouseUtils.shared.doubleClick(at: point)
-                    case "right_click":
-                        MouseUtils.shared.rightClick(at: point)
-                    default:
-                        print("Unsupported action type: \(agentResponse.action.type)")
-                    }
-
-                    return "Executed action: \(agentResponse.action.type) at (\(point.x), \(point.y))"
-                } catch {
-                    print("Detailed decoding error: \(error)")
-                    return "Failed to decode tool response: \(error)"
-                }
-            } else {
+            guard let toolResponseData = toolResponse.data(using: .utf8) else {
                 return "Invalid tool response format"
             }
+
+            let agentResponse = try JSONDecoder().decode(AgentToolResponse.self, from: toolResponseData)
+
+            guard let x = agentResponse.action.finalX,
+                  let y = agentResponse.action.finalY else {
+                return "Missing coordinates in response"
+            }
+
+            print("Successfully extracted coordinates: (\(x), \(y))")
+
+            guard let point = convertToScreenCoordinates(x: x, y: y) else {
+                return "Failed to convert coordinates to screen space"
+            }
+
+            print("Attempting to click at screen coordinates: \(point)")
+
+            switch agentResponse.action.type {
+            case "click":
+                MouseUtils.shared.click(at: point)
+            case "double_click":
+                MouseUtils.shared.doubleClick(at: point)
+            case "right_click":
+                MouseUtils.shared.rightClick(at: point)
+            default:
+                print("Unsupported action type: \(agentResponse.action.type)")
+            }
+
+            return "Executed action: \(agentResponse.action.type) at (\(point.x), \(point.y)). Explanation: \(agentResponse.explanation)"
         } catch let decodingError as DecodingError {
             print("Decoding error: \(decodingError)")
             return "Error occurred parsing response: \(decodingError.localizedDescription)"
         } catch {
-            print("Network error: \(error)")
-            return "Error occurred fetching: \(error.localizedDescription)"
+            print("Network or decoding error: \(error)")
+            return "Error occurred: \(error.localizedDescription)"
         }
     }
 

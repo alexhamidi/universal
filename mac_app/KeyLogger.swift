@@ -12,6 +12,7 @@ class KeyLogger: NSObject {
     private let maxDisplayedChars = 1000
     private let lineLength: Int = 32
     private let numLines: Int = 5
+    private var inChatMode = true
 
     private var isWindowVisible = false {
         didSet {
@@ -50,10 +51,10 @@ class KeyLogger: NSObject {
         }
         Task {
             do {
-                let response = try await AIService.shared.runAgent(currentText) // request or keep api?
+                let response = try await inChatMode ?
+                    AIService.shared.sendChat(currentText) :
+                    AIService.shared.runAgent(currentText)
                 self.llmResponse = response
-                // fullBuffer.removeAll()
-                // Text()
             } catch {
                 print("Error submitting prompt: \(error)")
             }
@@ -153,10 +154,16 @@ class KeyLogger: NSObject {
                     set: { self.isWindowVisible = $0 }
                 ),
                 text: .init(
-                    get: { self.fullBuffer.joined()  },
+                    get: { self.fullBuffer.joined() + "|" },
                     set: { newValue in
-                        self.fullBuffer = [newValue]
+                        // Remove the cursor character if it exists before storing
+                        let cleanText = newValue.replacingOccurrences(of: "|", with: "")
+                        self.fullBuffer = [cleanText]
                     }
+                ),
+                inChatMode: .init(
+                    get: { self.inChatMode },
+                    set: { self.inChatMode = $0 }
                 ),
                 llmResponse: self.llmResponse,
                 onSubmit: { self.handleSubmit() }

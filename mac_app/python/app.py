@@ -22,6 +22,9 @@ async def submit(text: str, screenshot_path: str):
     response_text = oai.submit_prompt(text, screenshot_path)
     return {"message": response_text}
 
+
+
+
 @app.get("/api/agent_round")
 async def agent_round(text: str, screenshot_path: str):
     print(f"Received request for agent round, text: {text}, screenshot_path: {screenshot_path}")
