@@ -10,7 +10,12 @@ cp Info.plist KeyLogger.app/Contents/
 # Compile the Swift files
 swiftc -parse-as-library \
     KeyLogger.swift \
-    OpenAIService.swift \
+    CommandPaletteView.swift \
+    AppDelegate.swift \
+    KeyLoggerApp.swift \
+    AIService.swift \
+    utils/ScreenshotUtils.swift \
+    utils/KeyUtils.swift \
     -o KeyLogger.app/Contents/MacOS/KeyLogger \
     -framework Cocoa \
     -framework Carbon

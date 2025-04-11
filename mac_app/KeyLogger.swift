@@ -5,72 +5,6 @@ import Carbon
 import Foundation
 import SwiftUI
 
-
-// Styling for the window itself
-
-class FloatingWindow: NSWindow {
-    private static var currentWindow: FloatingWindow?
-    let textField: NSTextField
-
-    static func createWindow() -> FloatingWindow {
-        if let existing = currentWindow {
-            existing.orderOut(nil)
-            currentWindow = nil
-        }
-        let window = FloatingWindow()
-        currentWindow = window
-        return window
-    }
-
-    init() {
-        let screenHeight = NSScreen.main?.frame.height ?? 800
-        let windowHeight: CGFloat = 110
-        let yPosition = screenHeight - windowHeight - 20  // 20px from top
-
-        // Initialize the text field before super.init
-        textField = NSTextField(frame: NSRect(x: 10, y: 10, width: 285, height: 85 ))
-        textField.isEditable = false
-        textField.isBordered = false
-        textField.drawsBackground = false
-        textField.textColor = .white
-        textField.backgroundColor = .clear
-        textField.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .medium)
-        textField.identifier = NSUserInterfaceItemIdentifier("displayText")
-        textField.alignment = .left
-        textField.stringValue = ""
-
-        super.init(
-            contentRect: NSRect(x: 20, y: yPosition, width: 305, height: windowHeight),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-
-        // Configure window properties
-        self.level = .statusBar
-        self.backgroundColor = NSColor.systemGray.withAlphaComponent(0.9)
-        self.isOpaque = false
-        self.hasShadow = true
-        self.isMovableByWindowBackground = false
-        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-        self.ignoresMouseEvents = true
-
-        // Add the text field to the window
-        self.contentView?.addSubview(textField)
-    }
-
-    override var canBecomeKey: Bool {
-        return false
-    }
-
-    override var canBecomeMain: Bool {
-        return false
-    }
-}
-
-
-
-
 // Log object - most important f
 class KeyLogger: NSObject {
     private var eventTap: CFMachPort?
@@ -78,114 +12,37 @@ class KeyLogger: NSObject {
     private let maxDisplayedChars = 1000
     private let lineLength: Int = 32
     private let numLines: Int = 5
-    private let screenshotsDirectory = "screenshots"
 
     private var isWindowVisible = false {
         didSet {
-            updateWindowVisibility()
+            updateWindowState()
         }
     }
-    private var fullBuffer: [String] = []
-    // private var lastKeystrokes: [String] = [] // this is the buffer, most important
+    private var fullBuffer: [String] = [] {
+        didSet {
+            updateWindowText()
+        }
+    }
     private var isCommandKeyPressed = false
     private var isOptionKeyPressed = false
-    private var currentText: String = "" {
+
+    // Add response state
+    private var llmResponse: String = "" {
         didSet {
             updateWindowText()
         }
     }
 
-    // SwiftUI state
     private var hostingController: NSHostingController<CommandPaletteView>?
 
-    // starts to initialize the window
     override init() {
         super.init()
         print("KeyLogger initializing...")
-        setupScreenshotsDirectory()
+        ScreenshotUtils.shared.setupScreenshotsDirectory()
         setupCommandPaletteWindow()
     }
 
-    private func setupScreenshotsDirectory() {
-        let fileManager = FileManager.default
-        let screenshotsPath = (fileManager.currentDirectoryPath as NSString).appendingPathComponent(screenshotsDirectory)
-
-        if !fileManager.fileExists(atPath: screenshotsPath) {
-            do {
-                try fileManager.createDirectory(atPath: screenshotsPath, withIntermediateDirectories: true)
-                print("Created screenshots directory at: \(screenshotsPath)")
-            } catch {
-                print("Error creating screenshots directory: \(error)")
-            }
-        }
-    }
-
-    private func captureScreenshot() -> String? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        let timestamp = dateFormatter.string(from: Date())
-        let filename = "screenshot_\(timestamp).png"
-        let fileManager = FileManager.default
-        let screenshotsPath = (fileManager.currentDirectoryPath as NSString).appendingPathComponent(screenshotsDirectory)
-        let filepath = (screenshotsPath as NSString).appendingPathComponent(filename)
-
-        // Get the main screen
-        guard let screen = NSScreen.main else { return nil }
-
-        // Create CGImage of the entire screen
-        guard let screenshot = CGWindowListCreateImage(
-            screen.frame,
-            .optionOnScreenOnly,
-            kCGNullWindowID,
-            [.bestResolution]
-        ) else { return nil }
-
-        // Convert to NSImage
-        let image = NSImage(cgImage: screenshot, size: screen.frame.size)
-
-        // Convert to PNG data
-        guard let tiffData = image.tiffRepresentation,
-              let bitmapImage = NSBitmapImageRep(data: tiffData),
-              let pngData = bitmapImage.representation(using: .png, properties: [:]) else {
-            return nil
-        }
-
-        do {
-            try pngData.write(to: URL(fileURLWithPath: filepath))
-            print("Screenshot saved to: \(filepath)")
-            return filepath
-        } catch {
-            print("Error saving screenshot: \(error)")
-            return nil
-        }
-    }
-
-    // not important
-    private func checkInputMonitoringPermission() -> Bool {
-        let trusted = CGPreflightListenEventAccess()
-        if !trusted {
-            print("Requesting input monitoring permission...")
-            let success = CGRequestListenEventAccess()
-            return success
-        }
-        return trusted
-    }
-
-    // toggle
-    private func toggleWindowVisibility() {
-        isWindowVisible.toggle()
-
-        if isWindowVisible {
-            if commandPaletteWindow == nil {
-                commandPaletteWindow = FloatingWindow.createWindow()
-            }
-            updateWindowText()  // Ensure cursor is displayed when window becomes visible
-            commandPaletteWindow?.makeKeyAndOrderFront(nil)
-        } else {
-            commandPaletteWindow?.orderOut(nil)
-        }
-    }
-
+    // handle submit text
     private func handleSubmit() {
         let currentText = fullBuffer.joined()
         if currentText.isEmpty {
@@ -193,22 +50,161 @@ class KeyLogger: NSObject {
         }
         Task {
             do {
-                guard let screenshotPath = captureScreenshot() else {
+                guard let screenshotPath = ScreenshotUtils.shared.captureScreenshot() else {
                     print("Failed to capture screenshot")
                     return
                 }
                 print("Captured screenshot at: \(screenshotPath)")
-                _ = try await OpenAIService.shared.submitPrompt(currentText, screenshotPath)
-                fullBuffer.removeAll()
-                updateWindowText()
+                let response = try await AIService.shared.submitPrompt(currentText, screenshotPath) // request or keep api?
+                self.llmResponse = response
+                // fullBuffer.removeAll()
+                // Text()
             } catch {
                 print("Error submitting prompt: \(error)")
             }
         }
     }
 
+    // handle keyboard events
+    let callback: CGEventTapCallBack = { proxy, type, event, refcon in
+        let logger = Unmanaged<KeyLogger>.fromOpaque(refcon!).takeUnretainedValue()
+
+        // action \in {cmdUpdated, optionUpdated, toggle, backspace, altBackspace, cmdBackspace, submit, nil, }
+
+        let eventType = KeyUtils.shared.getEventType(type, event)
+        if eventType != "toggle" && eventType != "cmdUpdated" && eventType != "optionUpdated" && !logger.isWindowVisible {
+            return Unmanaged.passRetained(event)
+        }
+        switch eventType {
+            case "cmdUpdated":
+                logger.isCommandKeyPressed = !logger.isCommandKeyPressed
+            case "optionUpdated":
+                logger.isOptionKeyPressed = !logger.isOptionKeyPressed
+            case "toggle":
+                DispatchQueue.main.async {
+                    logger.isWindowVisible.toggle()
+                }
+                return nil
+            case "backspace":
+                if !logger.fullBuffer.isEmpty {
+                    logger.fullBuffer.removeLast()
+                    return nil
+                }
+            case "altBackspace":
+                if !logger.fullBuffer.isEmpty {
+                    var deletedChar = logger.fullBuffer.last ?? ""
+                    while !logger.fullBuffer.isEmpty && deletedChar.trimmingCharacters(in: .whitespaces).isEmpty {
+                        logger.fullBuffer.removeLast()
+                        deletedChar = logger.fullBuffer.last ?? ""
+                    }
+                    while !logger.fullBuffer.isEmpty && !deletedChar.trimmingCharacters(in: .whitespaces).isEmpty {
+                        logger.fullBuffer.removeLast()
+                        deletedChar = logger.fullBuffer.last ?? ""
+                    }
+                    return nil
+                }
+            case "cmdBackspace":
+                if !logger.fullBuffer.isEmpty {
+                    logger.fullBuffer.removeAll()
+                    return nil
+                }
+            case "submit":
+                logger.handleSubmit()
+                return nil
+            case nil:
+                return Unmanaged.passRetained(event)
+            default:
+                if let chars = eventType {
+                    logger.fullBuffer.append(chars)
+                    return nil
+                }
+        }
+
+        return Unmanaged.passRetained(event)
+    }
+
+    // ================================================================
+    // Similar to useffect - these run on updates to text dynamically to update the ui.
+    // ================================================================
 
 
+    private func updateWindowState() {
+        DispatchQueue.main.async {
+            if self.isWindowVisible {
+                if self.commandPaletteWindow == nil {
+                    self.setupCommandPaletteWindow()
+                }
+                self.commandPaletteWindow?.makeKeyAndOrderFront(nil)
+            } else {
+                self.commandPaletteWindow?.orderOut(nil)
+                // self.fullBuffer.removeAll()
+                // self.llmResponse = ""
+            }
+
+            // Update SwiftUI view
+            self.hostingController?.rootView = self.getCommandPaletteView()
+        }
+    }
+
+    // ================================================================
+    // Similar to useffect - these run on updates to text dynamically to update the ui.
+    // ================================================================
+
+
+    private func getCommandPaletteView() -> CommandPaletteView {
+        return CommandPaletteView(
+                isVisible: .init(
+                    get: { self.isWindowVisible },
+                    set: { self.isWindowVisible = $0 }
+                ),
+                text: .init(
+                    get: { self.fullBuffer.joined()  },
+                    set: { newValue in
+                        self.fullBuffer = [newValue]
+                    }
+                ),
+                llmResponse: self.llmResponse,
+                onSubmit: { self.handleSubmit() }
+            )
+    }
+
+    private func updateWindowText() {
+        DispatchQueue.main.async {
+            self.hostingController?.rootView = self.getCommandPaletteView()
+        }
+    }
+
+    // ================================================================
+    // NOT IMPORTANT
+    // ================================================================
+
+    private func setupCommandPaletteWindow() {
+        let contentView = self.getCommandPaletteView()
+        hostingController = NSHostingController(rootView: contentView)
+        commandPaletteWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 80),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        commandPaletteWindow?.contentViewController = hostingController
+        commandPaletteWindow?.level = .statusBar
+        commandPaletteWindow?.backgroundColor = .clear
+        commandPaletteWindow?.isOpaque = false
+        commandPaletteWindow?.hasShadow = true
+
+        // Position window at the top left of the screen
+        if let screen = NSScreen.main {
+            let screenHeight = screen.frame.height
+            let windowHeight: CGFloat = 80
+            let yPosition = screenHeight - windowHeight + 60  // 20px from top
+            commandPaletteWindow?.setFrameTopLeftPoint(NSPoint(x: 20, y: yPosition))  // 20px from left edge
+        }
+
+        commandPaletteWindow?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        commandPaletteWindow?.ignoresMouseEvents = false
+    }
 
 
     // this isnt really important
@@ -230,7 +226,6 @@ class KeyLogger: NSObject {
         ) else {
             print("Failed to create event tap")
             fullBuffer = ["Failed to create event tap"]
-            updateWindowText()
             return
         }
 
@@ -242,271 +237,13 @@ class KeyLogger: NSObject {
         print("Keyboard monitoring started successfully")
     }
 
-
-
-    // important
-    let callback: CGEventTapCallBack = { proxy, type, event, refcon in
-        let logger = Unmanaged<KeyLogger>.fromOpaque(refcon!).takeUnretainedValue()
-        if type != .flagsChanged && type != .keyDown {
-            return Unmanaged.passRetained(event)
+    private func checkInputMonitoringPermission() -> Bool {
+        let trusted = CGPreflightListenEventAccess()
+        if !trusted {
+            print("Requesting input monitoring permission...")
+            let success = CGRequestListenEventAccess()
+            return success
         }
-
-        if type == .flagsChanged {
-            let flags = event.flags
-            logger.isCommandKeyPressed = flags.contains(.maskCommand)
-            logger.isOptionKeyPressed = flags.contains(.maskAlternate)
-
-        } else {
-            let keycode = event.getIntegerValueField(.keyboardEventKeycode)
-
-            // Check for Command + ; (semicolon)
-            if logger.isCommandKeyPressed && keycode == 41 { // 41 is the keycode for semicolon
-                DispatchQueue.main.async {
-                    logger.toggleWindowVisibility()
-                }
-                return nil
-            }
-
-            if !logger.isWindowVisible {
-                return Unmanaged.passRetained(event)
-            }
-               // Check for Command + Enter (keycode 36)
-            if logger.isCommandKeyPressed && keycode == 36 {
-                print("Command + Enter pressed")
-                DispatchQueue.main.async {
-                    logger.handleSubmit()
-                }
-                return nil
-            }
-
-
-            // Handle backspace (keycode 51) with modifiers
-            if keycode == 51 && !logger.fullBuffer.isEmpty {
-                if logger.isCommandKeyPressed {
-                    // Clear entire buffer
-                    logger.fullBuffer.removeAll()
-                } else if logger.isOptionKeyPressed {
-                    // Delete the last word
-                    var deletedChar = logger.fullBuffer.last ?? ""
-                    // First remove trailing spaces
-                    while !logger.fullBuffer.isEmpty && deletedChar.trimmingCharacters(in: .whitespaces).isEmpty {
-                        logger.fullBuffer.removeLast()
-                        deletedChar = logger.fullBuffer.last ?? ""
-                    }
-                    // Then remove the word
-                    while !logger.fullBuffer.isEmpty && !deletedChar.trimmingCharacters(in: .whitespaces).isEmpty {
-                        logger.fullBuffer.removeLast()
-                        deletedChar = logger.fullBuffer.last ?? ""
-                    }
-                } else {
-                    logger.fullBuffer.removeLast()
-                }
-
-                logger.updateWindowText()
-                return nil // Consume the backspace event
-            }
-
-            var actualStringLength: Int = 0
-            var unicodeString = [UniChar](repeating: 0, count: 4)
-
-            event.keyboardGetUnicodeString(
-                maxStringLength: 4,
-                actualStringLength: &actualStringLength,
-                unicodeString: &unicodeString
-            )
-
-            if actualStringLength > 0 && !logger.isCommandKeyPressed  {
-                let chars = String(utf16CodeUnits: unicodeString, count: actualStringLength)
-                logger.fullBuffer.append(chars)
-                logger.updateWindowText()
-                return nil // Consume the keyboard event
-            }
-        }
-        return Unmanaged.passRetained(event)
-    }
-
-
-    private func getLines() -> [String] {
-        // First split by return characters to get separate lines
-        let textByReturns = self.fullBuffer.joined().split(separator: "\r", omittingEmptySubsequences: false)
-        var formattedLines: [String] = []
-
-        for line in textByReturns {
-            // Convert line to string to preserve all spaces
-            let lineStr = String(line)
-
-            // If line is empty or only contains spaces, add it as is
-            if lineStr.isEmpty {
-                formattedLines.append("")
-                continue
-            }
-
-            // Split into chunks of maximum length while preserving all spaces
-            var currentIndex = lineStr.startIndex
-            while currentIndex < lineStr.endIndex {
-                let remainingLength = lineStr.distance(from: currentIndex, to: lineStr.endIndex)
-                let chunkLength = min(self.lineLength, remainingLength)
-                let endIndex = lineStr.index(currentIndex, offsetBy: chunkLength)
-
-                let chunk = String(lineStr[currentIndex..<endIndex])
-                formattedLines.append(chunk)
-
-                currentIndex = endIndex
-            }
-        }
-
-        return formattedLines
-    }
-
-    private func getDisplayedText() -> String { //assume single spaces
-        let lines = getLines()
-        return lines.suffix(self.numLines).joined(separator: "\n") + "|"
-    }
-
-    private func updateWindowText() {
-        DispatchQueue.main.async {
-            // Force SwiftUI view update
-            self.hostingController?.rootView = CommandPaletteView(
-                isVisible: .init(
-                    get: { self.isWindowVisible },
-                    set: { self.isWindowVisible = $0 }
-                ),
-                text: .init(
-                    get: { self.fullBuffer.joined() },
-                    set: { newValue in
-                        self.fullBuffer = [newValue]
-                    }
-                ),
-                onSubmit: { self.handleSubmit() }
-            )
-        }
-    }
-
-    private func updateWindowVisibility() {
-        DispatchQueue.main.async {
-            if self.isWindowVisible {
-                self.commandPaletteWindow?.makeKeyAndOrderFront(nil)
-                self.commandPaletteWindow?.center()
-            } else {
-                self.commandPaletteWindow?.orderOut(nil)
-                self.fullBuffer.removeAll()
-            }
-            // Force SwiftUI view update
-            self.hostingController?.rootView = CommandPaletteView(
-                isVisible: .init(
-                    get: { self.isWindowVisible },
-                    set: { self.isWindowVisible = $0 }
-                ),
-                text: .init(
-                    get: { self.fullBuffer.joined() },
-                    set: { newValue in
-                        self.fullBuffer = [newValue]
-                    }
-                ),
-                onSubmit: { self.handleSubmit() }
-            )
-        }
-    }
-
-    private func setupCommandPaletteWindow() {
-        let contentView = CommandPaletteView(
-            isVisible: .init(
-                get: { self.isWindowVisible },
-                set: { self.isWindowVisible = $0 }
-            ),
-            text: .init(
-                get: { self.fullBuffer.joined() },
-                set: { newValue in
-                    self.fullBuffer = [newValue]
-                }
-            ),
-            onSubmit: { self.handleSubmit() }
-        )
-
-        hostingController = NSHostingController(rootView: contentView)
-        commandPaletteWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 80),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-
-        commandPaletteWindow?.contentViewController = hostingController
-        commandPaletteWindow?.level = .statusBar
-        commandPaletteWindow?.backgroundColor = .clear
-        commandPaletteWindow?.isOpaque = false
-        commandPaletteWindow?.hasShadow = true
-        commandPaletteWindow?.center()
-        commandPaletteWindow?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        commandPaletteWindow?.ignoresMouseEvents = false
-
-        // Position window near the top of the screen
-        if let screen = NSScreen.main {
-            let screenHeight = screen.frame.height
-            let windowHeight: CGFloat = 80
-            let yPosition = screenHeight - windowHeight - 100  // 100px from top
-            commandPaletteWindow?.setFrameTopLeftPoint(NSPoint(x: (screen.frame.width - 600) / 2, y: yPosition))
-        }
+        return trusted
     }
 }
-
-
-
-
-
-
-
-
-
-// probably dont care about thishello
-class AppDelegate: NSObject, NSApplicationDelegate {
-    let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    let keyLogger = KeyLogger()
-
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        print("Application launching...")
-        if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: "Keyboard Monitor")
-        }
-
-        keyLogger.startLogging()
-    }
-}
-
-
-
-// main app
-@main
-struct KeyLoggerApp {
-    static func main() {
-        let app = NSApplication.shared
-        let delegate = AppDelegate()
-        app.delegate = delegate
-        _ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)
-    }
-}
-
-struct CommandPaletteView: View {
-    @Binding var isVisible: Bool
-    @Binding var text: String
-    var onSubmit: () -> Void
-
-    var body: some View {
-        VStack {
-            TextField("What would you like to do?", text: $text)
-                .textFieldStyle(PlainTextFieldStyle())
-                .font(.system(size: 16))
-                .padding(12)
-                .background(Color(NSColor.windowBackgroundColor).opacity(0.8))
-                .cornerRadius(8)
-                .onSubmit {
-                    onSubmit()
-                }
-        }
-        .frame(width: 600)
-        .padding()
-        .background(Color(NSColor.windowBackgroundColor).opacity(0.6))
-        .cornerRadius(12)
-    }
-}
-

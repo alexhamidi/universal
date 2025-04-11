@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "KeyLogger",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v12)
     ],
@@ -13,7 +14,8 @@ let package = Package(
         .executableTarget(
             name: "KeyLogger",
             dependencies: ["OpenAI"],
-            path: "."
+            path: ".",
+            exclude: ["dist", "node_modules", "KeyLogger.app"]
         )
     ]
 )
