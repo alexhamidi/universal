@@ -39,7 +39,6 @@ class KeyLogger: NSObject {
     override init() {
         super.init()
         print("KeyLogger initializing...")
-        ScreenshotUtils.shared.setupScreenshotsDirectory()
         setupCommandPaletteWindow()
     }
 

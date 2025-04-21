@@ -14,7 +14,6 @@ swiftc -parse-as-library \
     AppDelegate.swift \
     KeyLoggerApp.swift \
     AIService.swift \
-    utils/ScreenshotUtils.swift \
     utils/KeyUtils.swift \
     utils/MouseUtils.swift \
     -o KeyLogger.app/Contents/MacOS/KeyLogger \

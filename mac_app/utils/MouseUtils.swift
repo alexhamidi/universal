@@ -4,11 +4,17 @@ import Foundation
 public class MouseUtils {
     static let shared = MouseUtils()
 
+    private static func timestampedMessage(_ message: String) -> String {
+        let date = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return "[\(formatter.string(from: date))] \(message)"
+    }
+
     private var cliclickPath: String {
         // Check both Intel and Apple Silicon paths
         let paths = [
             "/opt/homebrew/bin/cliclick",  // Apple Silicon
-            "/usr/local/bin/cliclick"      // Intel
         ]
         return paths.first { FileManager.default.fileExists(atPath: $0) } ?? "/opt/homebrew/bin/cliclick"
     }
@@ -31,7 +37,7 @@ public class MouseUtils {
     }
 
     private func installCliclick() {
-        print("Installing cliclick via Homebrew...")
+        print(MouseUtils.timestampedMessage("Installing cliclick via Homebrew..."))
         let process = Process()
         process.launchPath = "/opt/homebrew/bin/brew"  // Use full path to brew
         process.arguments = ["install", "cliclick"]
@@ -40,7 +46,7 @@ public class MouseUtils {
             try process.run()
             process.waitUntilExit()
         } catch {
-            print("Failed to install cliclick: \(error)")
+            print(MouseUtils.timestampedMessage("Failed to install cliclick: \(error)"))
         }
     }
 
@@ -54,7 +60,7 @@ public class MouseUtils {
 
     private func executeCliclick(_ args: [String]) {
         guard ensureCliclickAvailable() else {
-            print("Failed to install cliclick. Please install it manually with: brew install cliclick")
+            print(MouseUtils.timestampedMessage("Failed to install cliclick. Please install it manually with: brew install cliclick"))
             return
         }
 
@@ -67,30 +73,30 @@ public class MouseUtils {
             process.waitUntilExit()
 
             if process.terminationStatus != 0 {
-                print("cliclick command failed with status: \(process.terminationStatus)")
+                print(MouseUtils.timestampedMessage("cliclick command failed with status: \(process.terminationStatus)"))
             }
         } catch {
-            print("Failed to execute cliclick: \(error)")
+            print(MouseUtils.timestampedMessage("Failed to execute cliclick: \(error)"))
         }
     }
 
     func click(at point: CGPoint) {
-        print("Clicking at: \(point)")
+        print(MouseUtils.timestampedMessage("Clicking at: \(point)"))
         executeCliclick(["c:\(Int(point.x)),\(Int(point.y))"])
     }
 
     func doubleClick(at point: CGPoint) {
-        print("Double-clicking at: \(point)")
+        print(MouseUtils.timestampedMessage("Double-clicking at: \(point)"))
         executeCliclick(["dc:\(Int(point.x)),\(Int(point.y))"])
     }
 
     func rightClick(at point: CGPoint) {
-        print("Right-clicking at: \(point)")
+        print(MouseUtils.timestampedMessage("Right-clicking at: \(point)"))
         executeCliclick(["rc:\(Int(point.x)),\(Int(point.y))"])
     }
 
     func moveMouse(to point: CGPoint) {
-        print("Moving mouse to: \(point)")
+        print(MouseUtils.timestampedMessage("Moving mouse to: \(point)"))
         executeCliclick(["m:\(Int(point.x)),\(Int(point.y))"])
     }
 }
